@@ -1,0 +1,18 @@
+# Compiled executable
+inventory
+
+# Runtime database
+data/*.db
+
+# Object files
+*.o
+
+# Shared libraries (later)
+*.so
+
+# Editor / OS junk
+.vscode/
+.DS_Store
+
+# Secrets / environment files
+.env
