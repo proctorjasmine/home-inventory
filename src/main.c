@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "database.h"
 #include "product.h"
+#include "inventory.h"
 
 int main(void){
     Database db = {0};
@@ -13,25 +14,38 @@ int main(void){
 
     int rc = product_find_by_barcode(
         &db,
-        "DOES-NOT-EXIST",
+        "TEST-COKE-12",
         &package
     );
 
     if (rc == 0)
     {
-        printf("Product found!\n\n");
-
-        printf("Name: %s\n", package.product_name);
-        printf("Brand: %s\n", package.brand);
-        printf("Barcode: %s\n", package.barcode);
-        printf("Package quantity: %d\n",
-               package.package_quantity);
-        printf("Inventory unit: %s\n",
+        printf("Scanned: %s\n", package.product_name);
+        printf("Package contains: %d %s(s)\n",
+               package.package_quantity,
                package.inventory_unit);
+
+        // Test data:
+        // user_id     1 = Jasmine
+        // location_id 4 = Refrigerator
+        if (inventory_add(
+                &db,
+                package.product_id,
+                4,
+                1,
+                package.package_quantity
+            ) == 0)
+        {
+            printf(
+                "Added %d %s(s) to inventory!\n",
+                package.package_quantity,
+                package.inventory_unit
+            );
+        }
     }
     else if (rc == 1)
     {
-        printf("Barcode not found.\n");
+        printf("Unknown barcode.\n");
     }
     else
     {
