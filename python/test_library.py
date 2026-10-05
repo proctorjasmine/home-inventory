@@ -9,9 +9,8 @@ DATABASE_PATH = PROJECT_ROOT / "data" / "inventory.db"
 
 inventory = Inventory(DATABASE_PATH)
 
-items = inventory.list()
+package = inventory.find_barcode("BANANA")
 
-for item in items:
-    print(item)
+print(package)
 
 inventory.close()

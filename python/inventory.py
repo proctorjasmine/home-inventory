@@ -21,6 +21,17 @@ class InventoryItem(ctypes.Structure):
         ("quantity", ctypes.c_int),
     ]
 
+class ProductPackage(ctypes.Structure):
+    _fields_ = [
+        ("product_id", ctypes.c_int),
+        ("package_id", ctypes.c_int),
+        ("barcode", ctypes.c_char * 64),
+        ("product_name", ctypes.c_char * 128),
+        ("brand", ctypes.c_char * 128),
+        ("inventory_unit", ctypes.c_char * 32),
+        ("package_quantity", ctypes.c_int),
+    ]
+
 class Inventory:
     def __init__(self, database_path):
         self.lib = ctypes.CDLL(str(LIBRARY_PATH))
@@ -66,6 +77,22 @@ class Inventory:
             ctypes.POINTER(ctypes.c_int)
         ]
         self.lib.inventory_list.restype = ctypes.c_int
+
+        self.lib.product_find_by_barcode.argtypes = [
+            ctypes.POINTER(Database),
+            ctypes.c_char_p,
+            ctypes.POINTER(ProductPackage)
+        ]
+        self.lib.product_find_by_barcode.restype = ctypes.c_int
+
+        self.lib.inventory_add.argtypes = [
+            ctypes.POINTER(Database),
+            ctypes.c_int,
+            ctypes.c_int,
+            ctypes.c_int,
+            ctypes.c_int
+        ]
+        self.lib.inventory_add.restype = ctypes.c_int
 
     def get_quantity(self, product_id, location_id):
         quantity = ctypes.c_int()
@@ -121,3 +148,40 @@ class Inventory:
             })
 
         return result
+
+    def find_barcode(self, barcode):
+        package = ProductPackage()
+
+        rc = self.lib.product_find_by_barcode(
+            ctypes.byref(self.db),
+            barcode.encode("utf-8"),
+            ctypes.byref(package)
+        )
+
+        if rc == 1:
+            return None
+
+        if rc != 0:
+            raise RuntimeError("Could not look up barcode.")
+
+        return {
+            "product_id": package.product_id,
+            "package_id": package.package_id,
+            "barcode": package.barcode.decode("utf-8"),
+            "product": package.product_name.decode("utf-8"),
+            "brand": package.brand.decode("utf-8"),
+            "unit": package.inventory_unit.decode("utf-8"),
+            "package_quantity": package.package_quantity,
+        }
+
+    def add(self, product_id, location_id, user_id, quantity):
+        rc = self.lib.inventory_add(
+            ctypes.byref(self.db),
+            product_id,
+            location_id,
+            user_id,
+            quantity
+        )
+
+        if rc != 0:
+            raise RuntimeError("Could not add inventory.")
