@@ -17,4 +17,4 @@ data/*.db
 # Secrets / environment files
 .env
 
-.venv/
+.venv/certs/

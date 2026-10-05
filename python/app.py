@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template
 
 from inventory import Inventory
 
@@ -10,6 +10,9 @@ DATABASE_PATH = PROJECT_ROOT / "data" / "inventory.db"
 
 app = Flask(__name__)
 
+@app.route("/")
+def home():
+    return render_template("index.html")
 
 @app.route("/api/inventory", methods=["GET"])
 def get_inventory():
@@ -178,6 +181,17 @@ def get_locations():
     finally:
         inventory.close()
 
+@app.route("/scan")
+def scan():
+    return render_template("scan.html")
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(
+        host="0.0.0.0",
+        port=5000,
+        debug=True,
+        ssl_context=(
+            "certs/dev-cert.pem",
+            "certs/dev-key.pem"
+        )
+    )

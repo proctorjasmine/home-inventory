@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Scan · Home Inventory</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+</head>
+
+<body>
+
+<div class="app">
+
+    <header class="header">
+        <div>
+            <p class="eyebrow">RESTOCK</p>
+            <h1>Scan Barcode</h1>
+        </div>
+
+        <a class="close-page" href="/">×</a>
+    </header>
+
+    <main>
+
+        <section class="scanner-card">
+
+            <div class="camera-container">
+
+                <video
+                    id="camera-preview"
+                    autoplay
+                    playsinline
+                    muted
+                ></video>
+
+                <div class="camera-guide">
+                    <div class="barcode-guide"></div>
+                </div>
+
+                <button
+                    class="camera-button"
+                    id="start-camera-button"
+                    type="button"
+                >
+                    Start Camera
+                </button>
+
+            </div>
+
+        </section>
+
+
+        <div class="barcode-divider">
+            <span>Enter barcode</span>
+        </div>
+
+
+        <form id="barcode-form">
+
+            <input
+                class="barcode-input"
+                id="barcode-input"
+                type="text"
+                inputmode="numeric"
+                autocomplete="off"
+                placeholder="Barcode"
+                required
+            >
+
+            <button
+                class="consume-button"
+                type="submit"
+            >
+                Look Up Product
+            </button>
+
+        </form>
+
+
+        <p
+            class="consume-error"
+            id="scan-error"
+        ></p>
+
+
+        <section
+            class="scan-result"
+            id="scan-result"
+            hidden
+        >
+
+            <p class="sheet-location">
+                PRODUCT FOUND
+            </p>
+
+            <h2 id="scan-product"></h2>
+
+            <p
+                class="scan-brand"
+                id="scan-brand"
+            ></p>
+
+            <div class="package-info">
+                <span id="scan-package-quantity"></span>
+                <span id="scan-package-unit"></span>
+            </div>
+
+
+            <label
+                class="location-label"
+                for="restock-location"
+            >
+                Add to
+            </label>
+
+            <select
+                class="location-select"
+                id="restock-location"
+            ></select>
+
+
+            <button
+                class="consume-button"
+                id="restock-button"
+                type="button"
+            >
+                Add to Inventory
+            </button>
+
+        </section>
+
+    </main>
+
+</div>
+
+<script
+    src="{{ url_for('static', filename='scan.js') }}"
+></script>
+
+</body>
+</html>

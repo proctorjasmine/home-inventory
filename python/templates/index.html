@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Home Inventory</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+</head>
+
+<body>
+
+    <div class="app">
+
+        <header class="header">
+            <div>
+                <p class="eyebrow">OUR HOME</p>
+                <h1>Inventory</h1>
+            </div>
+
+            <button
+                class="profile-button"
+                id="profile-button"
+                aria-label="Select user"
+            >
+                ?
+            </button>
+        </header>
+
+        <main>
+
+            <div class="search">
+                <span>⌕</span>
+
+                <input
+                    id="search-input"
+                    type="search"
+                    placeholder="Search inventory..."
+                >
+            </div>
+
+            <button class="scan-button" id="scan-button">
+                <span class="scan-icon">▣</span>
+
+                <span>
+                    <strong>Scan to Restock</strong>
+                    <small>Add a package to inventory</small>
+                </span>
+            </button>
+
+            <section class="inventory-section">
+                <div class="section-heading">
+                    <h2>Inventory</h2>
+                    <span id="item-count"></span>
+                </div>
+
+                <div id="inventory">
+                    <p class="loading">
+                        Loading inventory...
+                    </p>
+                </div>
+            </section>
+
+        </main>
+
+        <nav class="bottom-nav">
+            <button class="nav-item active">
+                <span>⌂</span>
+                <small>Home</small>
+            </button>
+
+            <button class="nav-item" id="nav-scan-button">
+                <span>▣</span>
+                <small>Scan</small>
+            </button>
+
+            <button class="nav-item">
+                <span>↻</span>
+                <small>History</small>
+            </button>
+        </nav>
+
+
+        <!-- User selection sheet -->
+
+        <div
+            class="sheet-overlay"
+            id="user-overlay"
+        ></div>
+
+        <div
+            class="bottom-sheet"
+            id="user-sheet"
+        >
+            <div class="sheet-handle"></div>
+
+            <button
+                class="sheet-close"
+                id="user-sheet-close"
+            >
+                ×
+            </button>
+
+            <p class="sheet-location">
+                PROFILE
+            </p>
+
+            <h2>Who's using the app?</h2>
+
+            <p class="user-help">
+                Inventory changes will be recorded
+                under this person.
+            </p>
+
+            <div
+                class="user-options"
+                id="user-options"
+            ></div>
+        </div>
+
+
+        <!-- Consume inventory sheet -->
+
+        <div
+            class="sheet-overlay"
+            id="sheet-overlay"
+        ></div>
+
+        <div
+            class="bottom-sheet"
+            id="consume-sheet"
+        >
+            <div class="sheet-handle"></div>
+
+            <button
+                class="sheet-close"
+                id="sheet-close"
+            >
+                ×
+            </button>
+
+            <p
+                class="sheet-location"
+                id="sheet-location"
+            ></p>
+
+            <h2 id="sheet-product"></h2>
+
+            <div class="sheet-stock">
+                <span id="sheet-stock-number"></span>
+                <span id="sheet-stock-unit"></span>
+            </div>
+
+            <p class="sheet-stock-label">
+                currently in stock
+            </p>
+
+            <div class="quantity-control">
+                <button id="quantity-minus">−</button>
+
+                <span id="consume-quantity">1</span>
+
+                <button id="quantity-plus">+</button>
+            </div>
+
+            <button
+                class="consume-button"
+                id="consume-button"
+            >
+                Consume 1
+            </button>
+
+            <p
+                class="consume-error"
+                id="consume-error"
+            ></p>
+        </div>
+
+    </div>
+
+    <script
+        src="{{ url_for('static', filename='app.js') }}"
+    ></script>
+
+</body>
+</html>
