@@ -1,55 +1,44 @@
 #include <stdio.h>
+
 #include "database.h"
-#include "product.h"
 #include "inventory.h"
 
-int main(void){
+#define MAX_INVENTORY_ITEMS 100
+
+int main(void)
+{
     Database db = {0};
 
     if (database_open(&db, "data/inventory.db") != 0){
         return 1;
     }
 
-    ProductPackage package;
+    InventoryItem items[MAX_INVENTORY_ITEMS];
+    int item_count = 0;
 
-    int rc = product_find_by_barcode(
-        &db,
-        "TEST-COKE-12",
-        &package
-    );
-
-    if (rc == 0)
+    if (inventory_list(
+            &db,
+            items,
+            MAX_INVENTORY_ITEMS,
+            &item_count
+        ) != 0)
     {
-        printf("Scanned: %s\n", package.product_name);
-        printf("Package contains: %d %s(s)\n",
-               package.package_quantity,
-               package.inventory_unit);
-
-        // Test data:
-        // user_id     1 = Jasmine
-        // location_id 4 = Refrigerator
-        if (inventory_add(
-                &db,
-                package.product_id,
-                4,
-                1,
-                package.package_quantity
-            ) == 0)
-        {
-            printf(
-                "Added %d %s(s) to inventory!\n",
-                package.package_quantity,
-                package.inventory_unit
-            );
-        }
+        database_close(&db);
+        return 1;
     }
-    else if (rc == 1)
+
+    printf("Current Inventory\n");
+    printf("=================\n\n");
+
+    for (int i = 0; i < item_count; i++)
     {
-        printf("Unknown barcode.\n");
-    }
-    else
-    {
-        printf("Database error.\n");
+        printf(
+            "%-20s %-15s %d %s(s)\n",
+            items[i].product_name,
+            items[i].location_name,
+            items[i].quantity,
+            items[i].inventory_unit
+        );
     }
 
     database_close(&db);
