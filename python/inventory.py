@@ -94,6 +94,32 @@ class Inventory:
         ]
         self.lib.inventory_add.restype = ctypes.c_int
 
+        self.lib.inventory_remove.argtypes = [
+            ctypes.POINTER(Database),
+            ctypes.c_int,
+            ctypes.c_int,
+            ctypes.c_int,
+            ctypes.c_int
+        ]
+        self.lib.inventory_remove.restype = ctypes.c_int
+
+        self.lib.user_list.argtypes = [
+            ctypes.POINTER(Database),
+            ctypes.POINTER(User),
+            ctypes.c_int,
+            ctypes.POINTER(ctypes.c_int)
+        ]
+        self.lib.user_list.restype = ctypes.c_int
+
+
+        self.lib.location_list.argtypes = [
+            ctypes.POINTER(Database),
+            ctypes.POINTER(Location),
+            ctypes.c_int,
+            ctypes.POINTER(ctypes.c_int)
+        ]
+        self.lib.location_list.restype = ctypes.c_int
+
     def get_quantity(self, product_id, location_id):
         quantity = ctypes.c_int()
 
@@ -185,3 +211,98 @@ class Inventory:
 
         if rc != 0:
             raise RuntimeError("Could not add inventory.")
+
+    def remove(self, product_id, location_id, user_id, quantity):
+        rc = self.lib.inventory_remove(
+            ctypes.byref(self.db),
+            product_id,
+            location_id,
+            user_id,
+            quantity
+        )
+
+        if rc == 1:
+            return False
+
+        if rc != 0:
+            raise RuntimeError("Could not remove inventory.")
+
+        return True
+
+    def list_users(self):
+        max_users = 100
+
+        users = (User * max_users)()
+        user_count = ctypes.c_int()
+
+        rc = self.lib.user_list(
+            ctypes.byref(self.db),
+            users,
+            max_users,
+            ctypes.byref(user_count)
+        )
+
+        if rc != 0:
+            raise RuntimeError("Could not read users.")
+
+        result = []
+
+        for i in range(user_count.value):
+            user = users[i]
+
+            result.append({
+                "id": user.id,
+                "name": user.name.decode("utf-8"),
+            })
+
+        return result
+
+
+    def list_locations(self):
+        max_locations = 100
+
+        locations = (Location * max_locations)()
+        location_count = ctypes.c_int()
+
+        rc = self.lib.location_list(
+            ctypes.byref(self.db),
+            locations,
+            max_locations,
+            ctypes.byref(location_count)
+        )
+
+        if rc != 0:
+            raise RuntimeError("Could not read locations.")
+
+        result = []
+
+        for i in range(location_count.value):
+            location = locations[i]
+
+            result.append({
+                "id": location.id,
+                "name": location.name.decode("utf-8"),
+                "parent_id": (
+                    location.parent_id
+                    if location.has_parent
+                    else None
+                ),
+            })
+
+        return result
+
+
+class User(ctypes.Structure):
+    _fields_ = [
+        ("id", ctypes.c_int),
+        ("name", ctypes.c_char * 128),
+    ]
+
+
+class Location(ctypes.Structure):
+    _fields_ = [
+        ("id", ctypes.c_int),
+        ("parent_id", ctypes.c_int),
+        ("has_parent", ctypes.c_int),
+        ("name", ctypes.c_char * 128),
+    ]

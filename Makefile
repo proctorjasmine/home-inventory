@@ -10,7 +10,9 @@ TEST_PROGRAM = inventory_test
 
 LIB_SOURCES = src/database.c \
               src/product.c \
-              src/inventory.c
+              src/inventory.c \
+			  src/user.c \
+			  src/location.c
 
 LIB_OBJECTS = $(LIB_SOURCES:src/%.c=$(BUILD_DIR)/%.o)
 

@@ -98,6 +98,86 @@ def add_inventory():
     finally:
         inventory.close()
 
-        
+
+@app.route("/api/inventory/remove", methods=["POST"])
+def remove_inventory():
+    data = request.get_json(silent=True)
+
+    if data is None:
+        return jsonify({
+            "error": "Request body must be JSON"
+        }), 400
+
+    product_id = data.get("product_id")
+    location_id = data.get("location_id")
+    user_id = data.get("user_id")
+    quantity = data.get("quantity", 1)
+
+    if product_id is None or location_id is None or user_id is None:
+        return jsonify({
+            "error": "product_id, location_id, and user_id are required"
+        }), 400
+
+    if not isinstance(quantity, int) or quantity <= 0:
+        return jsonify({
+            "error": "quantity must be a positive integer"
+        }), 400
+
+    inventory = Inventory(DATABASE_PATH)
+
+    try:
+        removed = inventory.remove(
+            product_id=product_id,
+            location_id=location_id,
+            user_id=user_id,
+            quantity=quantity
+        )
+
+        if not removed:
+            return jsonify({
+                "error": "Not enough inventory"
+            }), 409
+
+        new_quantity = inventory.get_quantity(
+            product_id=product_id,
+            location_id=location_id
+        )
+
+        return jsonify({
+            "message": "Inventory removed",
+            "removed": quantity,
+            "new_quantity": new_quantity
+        })
+
+    except RuntimeError as error:
+        return jsonify({
+            "error": str(error)
+        }), 400
+
+    finally:
+        inventory.close()
+
+@app.route("/api/users", methods=["GET"])
+def get_users():
+    inventory = Inventory(DATABASE_PATH)
+
+    try:
+        return jsonify(inventory.list_users())
+
+    finally:
+        inventory.close()
+
+
+@app.route("/api/locations", methods=["GET"])
+def get_locations():
+    inventory = Inventory(DATABASE_PATH)
+
+    try:
+        return jsonify(inventory.list_locations())
+
+    finally:
+        inventory.close()
+
+
 if __name__ == "__main__":
     app.run(debug=True)
