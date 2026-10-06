@@ -21,6 +21,20 @@ class InventoryItem(ctypes.Structure):
         ("quantity", ctypes.c_int),
     ]
 
+class InventoryTransaction(ctypes.Structure):
+    _fields_ = [
+        ("id", ctypes.c_int),
+        ("product_id", ctypes.c_int),
+        ("location_id", ctypes.c_int),
+        ("user_id", ctypes.c_int),
+        ("product_name", ctypes.c_char * 128),
+        ("inventory_unit", ctypes.c_char * 32),
+        ("location_name", ctypes.c_char * 128),
+        ("user_name", ctypes.c_char * 128),
+        ("quantity_change", ctypes.c_int),
+        ("created_at", ctypes.c_char * 32),
+    ]
+
 class Product(ctypes.Structure):
     _fields_ = [
         ("id", ctypes.c_int),
@@ -85,6 +99,14 @@ class Inventory:
             ctypes.POINTER(ctypes.c_int)
         ]
         self.lib.inventory_list.restype = ctypes.c_int
+
+        self.lib.inventory_transaction_list.argtypes = [
+            ctypes.POINTER(Database),
+            ctypes.POINTER(InventoryTransaction),
+            ctypes.c_int,
+            ctypes.POINTER(ctypes.c_int)
+        ]
+        self.lib.inventory_transaction_list.restype = ctypes.c_int
 
         self.lib.product_find_by_barcode.argtypes = [
             ctypes.POINTER(Database),
@@ -211,6 +233,47 @@ class Inventory:
                 "location": item.location_name.decode("utf-8"),
                 "quantity": item.quantity,
                 "unit": item.inventory_unit.decode("utf-8"),
+            })
+
+        return result
+
+    def list_transactions(self):
+        max_transactions = 100
+
+        transactions = (
+            InventoryTransaction * max_transactions
+        )()
+
+        transaction_count = ctypes.c_int()
+
+        rc = self.lib.inventory_transaction_list(
+            ctypes.byref(self.db),
+            transactions,
+            max_transactions,
+            ctypes.byref(transaction_count)
+        )
+
+        if rc != 0:
+            raise RuntimeError(
+                "Could not read transaction history."
+            )
+
+        result = []
+
+        for i in range(transaction_count.value):
+            transaction = transactions[i]
+
+            result.append({
+                "id": transaction.id,
+                "product_id": transaction.product_id,
+                "location_id": transaction.location_id,
+                "user_id": transaction.user_id,
+                "product": transaction.product_name.decode("utf-8"),
+                "unit": transaction.inventory_unit.decode("utf-8"),
+                "location": transaction.location_name.decode("utf-8"),
+                "user": transaction.user_name.decode("utf-8"),
+                "quantity_change": transaction.quantity_change,
+                "created_at": transaction.created_at.decode("utf-8"),
             })
 
         return result

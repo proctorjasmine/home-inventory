@@ -662,3 +662,12 @@ document
         "click",
         openScanner
     );
+
+document
+    .getElementById("nav-history-button")
+    .addEventListener(
+        "click",
+        () => {
+            window.location.href = "/history";
+        }
+    );

@@ -26,6 +26,23 @@ def get_inventory():
     finally:
         inventory.close()
 
+@app.route("/api/history", methods=["GET"])
+def get_history():
+    inventory = Inventory(DATABASE_PATH)
+
+    try:
+        transactions = inventory.list_transactions()
+
+        return jsonify(transactions)
+
+    except RuntimeError as error:
+        return jsonify({
+            "error": str(error)
+        }), 500
+
+    finally:
+        inventory.close()
+
 
 @app.route("/api/products/barcode/<barcode>", methods=["GET"])
 def get_product_by_barcode(barcode):
@@ -260,6 +277,10 @@ def add_product_package():
 @app.route("/scan")
 def scan():
     return render_template("scan.html")
+
+@app.route("/history")
+def history():
+    return render_template("history.html")
 
 
 @app.post("/api/products")

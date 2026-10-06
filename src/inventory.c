@@ -515,3 +515,171 @@ int inventory_list(
 
     return 0;
 }
+
+int inventory_transaction_list(
+    Database *db,
+    InventoryTransaction *transactions,
+    int max_transactions,
+    int *transaction_count
+)
+{
+    if (
+        db == NULL ||
+        db->connection == NULL ||
+        transactions == NULL ||
+        transaction_count == NULL ||
+        max_transactions <= 0
+    )
+    {
+        return -1;
+    }
+
+    sqlite3_stmt *stmt = NULL;
+
+    const char *sql =
+        "SELECT "
+        "t.id, "
+        "t.product_id, "
+        "t.location_id, "
+        "t.user_id, "
+        "p.name, "
+        "p.inventory_unit, "
+        "l.name, "
+        "u.name, "
+        "t.quantity_change, "
+        "t.created_at "
+        "FROM transactions t "
+        "JOIN products p ON t.product_id = p.id "
+        "JOIN locations l ON t.location_id = l.id "
+        "JOIN users u ON t.user_id = u.id "
+        "ORDER BY t.created_at DESC, t.id DESC;";
+
+    int rc = sqlite3_prepare_v2(
+        db->connection,
+        sql,
+        -1,
+        &stmt,
+        NULL
+    );
+
+    if (rc != SQLITE_OK)
+    {
+        fprintf(
+            stderr,
+            "Could not prepare transaction history: %s\n",
+            sqlite3_errmsg(db->connection)
+        );
+
+        return -1;
+    }
+
+    int count = 0;
+
+    while (
+        count < max_transactions &&
+        (rc = sqlite3_step(stmt)) == SQLITE_ROW
+    )
+    {
+        InventoryTransaction *transaction =
+            &transactions[count];
+
+        transaction->id =
+            sqlite3_column_int(stmt, 0);
+
+        transaction->product_id =
+            sqlite3_column_int(stmt, 1);
+
+        transaction->location_id =
+            sqlite3_column_int(stmt, 2);
+
+        transaction->user_id =
+            sqlite3_column_int(stmt, 3);
+
+        const unsigned char *product_name =
+            sqlite3_column_text(stmt, 4);
+
+        const unsigned char *inventory_unit =
+            sqlite3_column_text(stmt, 5);
+
+        const unsigned char *location_name =
+            sqlite3_column_text(stmt, 6);
+
+        const unsigned char *user_name =
+            sqlite3_column_text(stmt, 7);
+
+        snprintf(
+            transaction->product_name,
+            sizeof(transaction->product_name),
+            "%s",
+            product_name != NULL
+                ? (const char *)product_name
+                : ""
+        );
+
+        snprintf(
+            transaction->inventory_unit,
+            sizeof(transaction->inventory_unit),
+            "%s",
+            inventory_unit != NULL
+                ? (const char *)inventory_unit
+                : ""
+        );
+
+        snprintf(
+            transaction->location_name,
+            sizeof(transaction->location_name),
+            "%s",
+            location_name != NULL
+                ? (const char *)location_name
+                : ""
+        );
+
+        snprintf(
+            transaction->user_name,
+            sizeof(transaction->user_name),
+            "%s",
+            user_name != NULL
+                ? (const char *)user_name
+                : ""
+        );
+
+        transaction->quantity_change =
+            sqlite3_column_int(stmt, 8);
+
+        const unsigned char *created_at =
+            sqlite3_column_text(stmt, 9);
+
+        snprintf(
+            transaction->created_at,
+            sizeof(transaction->created_at),
+            "%s",
+            created_at != NULL
+                ? (const char *)created_at
+                : ""
+        );
+
+        count++;
+    }
+
+    if (
+        rc != SQLITE_DONE &&
+        count < max_transactions
+    )
+    {
+        fprintf(
+            stderr,
+            "Could not read transaction history: %s\n",
+            sqlite3_errmsg(db->connection)
+        );
+
+        sqlite3_finalize(stmt);
+
+        return -1;
+    }
+
+    sqlite3_finalize(stmt);
+
+    *transaction_count = count;
+
+    return 0;
+}

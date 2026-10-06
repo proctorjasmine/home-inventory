@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Inventory History</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+</head>
+
+<body>
+
+    <div class="app">
+
+        <header class="header">
+            <div>
+                <p class="eyebrow">OUR HOME</p>
+                <h1>History</h1>
+            </div>
+
+            <button
+                class="profile-button"
+                id="profile-button"
+                aria-label="Current user"
+            >
+                ?
+            </button>
+        </header>
+
+        <main>
+
+            <section class="history-section">
+
+                <div class="section-heading">
+                    <h2>Recent Activity</h2>
+                    <span id="history-count"></span>
+                </div>
+
+                <div id="history">
+                    <p class="loading">
+                        Loading history...
+                    </p>
+                </div>
+
+            </section>
+
+        </main>
+
+        <nav class="bottom-nav">
+
+            <button
+                class="nav-item"
+                id="nav-home-button"
+            >
+                <span>⌂</span>
+                <small>Home</small>
+            </button>
+
+            <button
+                class="nav-item"
+                id="nav-scan-button"
+            >
+                <span>▣</span>
+                <small>Scan</small>
+            </button>
+
+            <button class="nav-item active">
+                <span>↻</span>
+                <small>History</small>
+            </button>
+
+        </nav>
+
+    </div>
+
+    <script
+        src="{{ url_for('static', filename='history.js') }}"
+    ></script>
+
+</body>
+</html>
