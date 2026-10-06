@@ -91,6 +91,222 @@
             id="scan-error"
         ></p>
 
+        <section class="new-product-card" id="unknown-barcode-section" hidden>
+            <div class="new-product-heading">
+                <span class="new-product-label">NEW BARCODE</span>
+                <h2>Barcode Not Recognized</h2>
+                <p>Is this another package size of something you already track, or a brand-new product?</p>
+            </div>
+
+            <div class="unknown-barcode-actions">
+                <button class="choice-card" id="existing-product-choice" type="button">
+                    <strong>Another Package Size</strong>
+                    <span>Link this barcode to an existing product.</span>
+                </button>
+
+                <button class="choice-card" id="new-product-choice" type="button">
+                    <strong>Create New Product</strong>
+                    <span>Add something you do not track yet.</span>
+                </button>
+            </div>
+        </section>
+
+        <section class="new-product-card" id="existing-package-section" hidden>
+            <div class="new-product-heading">
+                <span class="new-product-label">PACKAGE VARIANT</span>
+                <h2>Link to Existing Product</h2>
+                <p>This barcode will become another package size for the selected product.</p>
+            </div>
+
+            <form id="existing-package-form">
+                <label class="form-label">Barcode</label>
+                <input class="form-input" id="existing-package-barcode" type="text" readonly>
+
+                <label class="form-label" for="existing-product-select">Product</label>
+                <select class="form-input" id="existing-product-select" required></select>
+
+                <label class="form-label" for="existing-package-quantity">Package Contains</label>
+                <div class="package-quantity-row">
+                    <input class="form-input" id="existing-package-quantity" type="number" min="1" value="1" required>
+                    <span class="package-unit-preview" id="existing-package-unit">items</span>
+                </div>
+
+                <button class="primary-form-button" id="save-package-button" type="submit">Save Package</button>
+                <button class="secondary-form-button" id="back-to-barcode-choice" type="button">Back</button>
+            </form>
+        </section>
+
+        <section
+            class="new-product-card"
+            id="new-product-section"
+            hidden
+        >
+            <div class="new-product-heading">
+                <span class="new-product-label">
+                    NEW BARCODE
+                </span>
+
+                <h2>Add New Product</h2>
+
+                <p>
+                    This barcode isn't in your inventory yet.
+                    Tell us what it belongs to.
+                </p>
+            </div>
+
+            <form id="new-product-form">
+
+                <label class="form-label">
+                    Barcode
+                </label>
+
+                <input
+                    class="form-input"
+                    id="new-product-barcode"
+                    type="text"
+                    readonly
+                >
+
+
+                <label class="form-label">
+                    Product Name
+                </label>
+
+                <input
+                    class="form-input"
+                    id="new-product-name"
+                    type="text"
+                    placeholder="Coke Zero"
+                    autocomplete="off"
+                    required
+                >
+
+
+                <label class="form-label">
+                    Brand
+                </label>
+
+                <input
+                    class="form-input"
+                    id="new-product-brand"
+                    type="text"
+                    placeholder="Coca-Cola"
+                    autocomplete="off"
+                >
+
+
+                <div class="form-row">
+
+                    <div>
+                        <label class="form-label">
+                            Package Contains
+                        </label>
+
+                        <input
+                            class="form-input"
+                            id="new-product-quantity"
+                            type="number"
+                            min="1"
+                            value="1"
+                            required
+                        >
+                    </div>
+
+                    <div>
+                        <label class="form-label">
+                            Unit
+                        </label>
+
+                        <select
+                            class="form-input"
+                            id="new-product-unit"
+                            required
+                        >
+                            <option value="item">
+                                item
+                            </option>
+
+                            <option value="can">
+                                can
+                            </option>
+
+                            <option value="bottle">
+                                bottle
+                            </option>
+
+                            <option value="box">
+                                box
+                            </option>
+
+                            <option value="bag">
+                                bag
+                            </option>
+
+                            <option value="roll">
+                                roll
+                            </option>
+
+                            <option value="packet">
+                                packet
+                            </option>
+                        </select>
+                    </div>
+
+                </div>
+
+
+                <label class="form-label">
+                    Low Stock At
+                </label>
+
+                <input
+                    class="form-input"
+                    id="new-product-threshold"
+                    type="number"
+                    min="0"
+                    value="0"
+                    required
+                >
+
+                <p class="form-help">
+                    We'll consider this product low when
+                    your total inventory reaches this amount.
+                </p>
+
+
+                <label class="toggle-row">
+
+                    <div>
+                        <strong>
+                            Add to grocery list when low
+                        </strong>
+
+                        <span>
+                            We'll connect this to Skylight later.
+                        </span>
+                    </div>
+
+                    <input
+                        id="new-product-grocery"
+                        type="checkbox"
+                    >
+
+                </label>
+
+
+                <button
+                    class="primary-form-button"
+                    id="create-product-button"
+                    type="submit"
+                >
+                    Create Product
+                </button>
+
+                <button class="secondary-form-button" id="back-to-new-barcode-choice" type="button">Back</button>
+
+            </form>
+        </section>
+
 
         <section
             class="scan-result"
@@ -141,6 +357,10 @@
     </main>
 
 </div>
+
+<script
+    src="https://unpkg.com/@zxing/browser@0.2.1">
+</script>
 
 <script
     src="{{ url_for('static', filename='scan.js') }}"

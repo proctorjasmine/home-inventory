@@ -1,5 +1,9 @@
 # Compiled executable
 inventory
+inventory_test
+build/
+*.o
+*.so
 
 # Runtime database
 data/*.db
@@ -17,4 +21,8 @@ data/*.db
 # Secrets / environment files
 .env
 
-.venv/certs/
+.venv/
+*.pyc
+__pycache__/
+
+certs/

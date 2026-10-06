@@ -785,3 +785,232 @@ main {
 
     z-index: 2;
 }
+
+/* =========================================================
+   NEW PRODUCT
+   ========================================================= */
+
+.new-product-card {
+    margin: 20px 16px 110px;
+    padding: 20px;
+
+    background: var(--surface);
+
+    border: 1px solid var(--border);
+    border-radius: 20px;
+
+    box-shadow:
+        0 8px 24px rgba(0, 0, 0, 0.05);
+}
+
+.new-product-heading {
+    margin-bottom: 22px;
+}
+
+.new-product-label {
+    display: inline-block;
+
+    margin-bottom: 7px;
+
+    font-size: 11px;
+    font-weight: 800;
+
+    letter-spacing: 0.12em;
+
+    color: var(--accent);
+}
+
+.new-product-heading h2 {
+    margin: 0 0 7px;
+
+    font-size: 23px;
+    color: var(--text);
+}
+
+.new-product-heading p {
+    margin: 0;
+
+    color: var(--muted);
+
+    font-size: 14px;
+    line-height: 1.45;
+}
+
+.form-label {
+    display: block;
+
+    margin: 16px 0 7px;
+
+    color: var(--text);
+
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.form-input {
+    box-sizing: border-box;
+
+    width: 100%;
+    min-width: 0;
+
+    padding: 13px 14px;
+
+    background: var(--background);
+
+    border: 1px solid var(--border);
+    border-radius: 12px;
+
+    color: var(--text);
+
+    font: inherit;
+
+    outline: none;
+}
+
+.form-input:focus {
+    border-color: var(--accent);
+}
+
+.form-input[readonly] {
+    color: var(--muted);
+}
+
+.form-row {
+    display: grid;
+
+    grid-template-columns:
+        minmax(0, 1fr)
+        minmax(0, 1fr);
+
+    gap: 12px;
+}
+
+.form-help {
+    margin: 7px 0 0;
+
+    color: var(--muted);
+
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.toggle-row {
+    display: flex;
+
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 16px;
+
+    margin-top: 22px;
+    padding: 14px;
+
+    background: var(--accent-light);
+
+    border-radius: 14px;
+}
+
+.toggle-row strong {
+    display: block;
+
+    color: var(--text);
+
+    font-size: 14px;
+}
+
+.toggle-row span {
+    display: block;
+
+    margin-top: 3px;
+
+    color: var(--muted);
+
+    font-size: 11px;
+}
+
+.toggle-row input {
+    width: 22px;
+    height: 22px;
+
+    flex-shrink: 0;
+
+    accent-color: var(--accent);
+}
+
+.primary-form-button {
+    width: 100%;
+
+    margin-top: 22px;
+    padding: 14px;
+
+    border: 0;
+    border-radius: 14px;
+
+    background: var(--accent);
+    color: white;
+
+    font: inherit;
+    font-weight: 800;
+}
+/* ---------- Unknown barcode / package variants ---------- */
+
+.unknown-barcode-actions {
+    display: grid;
+    gap: 12px;
+}
+
+.choice-card {
+    width: 100%;
+    padding: 17px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--background);
+    color: var(--text);
+    text-align: left;
+}
+
+.choice-card strong,
+.choice-card span {
+    display: block;
+}
+
+.choice-card strong {
+    margin-bottom: 4px;
+    font-size: 16px;
+}
+
+.choice-card span {
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.choice-card:active {
+    background: var(--accent-light);
+    border-color: var(--accent);
+}
+
+.package-quantity-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+}
+
+.package-unit-preview {
+    min-width: 72px;
+    color: var(--muted);
+    font-size: 14px;
+}
+
+.secondary-form-button {
+    width: 100%;
+    margin-top: 10px;
+    padding: 13px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--surface);
+    color: var(--text);
+    font: inherit;
+    font-weight: 700;
+}

@@ -181,9 +181,185 @@ def get_locations():
     finally:
         inventory.close()
 
+@app.route("/api/products", methods=["GET"])
+def get_products():
+    inventory = Inventory(DATABASE_PATH)
+
+    try:
+        return jsonify(inventory.list_products())
+
+    finally:
+        inventory.close()
+
+
+@app.route("/api/product-packages", methods=["POST"])
+def add_product_package():
+    data = request.get_json(silent=True)
+
+    if data is None:
+        return jsonify({
+            "error": "Request body must be JSON"
+        }), 400
+
+    product_id = data.get("product_id")
+    barcode = str(
+        data.get("barcode", "")
+    ).strip()
+
+    try:
+        package_quantity = int(
+            data.get("package_quantity", 0)
+        )
+    except (TypeError, ValueError):
+        return jsonify({
+            "error": "Package quantity must be a number."
+        }), 400
+
+    if product_id is None:
+        return jsonify({
+            "error": "product_id is required."
+        }), 400
+
+    if not barcode:
+        return jsonify({
+            "error": "Barcode is required."
+        }), 400
+
+    if package_quantity <= 0:
+        return jsonify({
+            "error": "Package quantity must be greater than zero."
+        }), 400
+
+    inventory = Inventory(DATABASE_PATH)
+
+    try:
+        inventory.add_package(
+            product_id=product_id,
+            barcode=barcode,
+            package_quantity=package_quantity
+        )
+
+        return jsonify({
+            "message": "Package added.",
+            "product_id": product_id,
+            "barcode": barcode,
+            "package_quantity": package_quantity
+        }), 201
+
+    except RuntimeError:
+        return jsonify({
+            "error":
+                "Could not add package. "
+                "The barcode may already exist."
+        }), 409
+
+    finally:
+        inventory.close()
+
+
 @app.route("/scan")
 def scan():
     return render_template("scan.html")
+
+
+@app.post("/api/products")
+def create_product():
+    data = request.get_json(silent=True)
+
+    if not data:
+        return jsonify({
+            "error": "JSON body is required."
+        }), 400
+
+    name = str(data.get("name", "")).strip()
+    brand = str(data.get("brand", "")).strip()
+    inventory_unit = str(
+        data.get("inventory_unit", "")
+    ).strip()
+
+    barcode = str(
+        data.get("barcode", "")
+    ).strip()
+
+    try:
+        package_quantity = int(
+            data.get("package_quantity", 0)
+        )
+
+        low_stock_threshold = int(
+            data.get("low_stock_threshold", 0)
+        )
+    except (TypeError, ValueError):
+        return jsonify({
+            "error":
+                "Package quantity and low-stock "
+                "threshold must be numbers."
+        }), 400
+
+    auto_add_grocery = bool(
+        data.get("auto_add_grocery", False)
+    )
+
+    if not name:
+        return jsonify({
+            "error": "Product name is required."
+        }), 400
+
+    if not inventory_unit:
+        return jsonify({
+            "error": "Inventory unit is required."
+        }), 400
+
+    if not barcode:
+        return jsonify({
+            "error": "Barcode is required."
+        }), 400
+
+    if package_quantity <= 0:
+        return jsonify({
+            "error":
+                "Package quantity must be greater than zero."
+        }), 400
+
+    if low_stock_threshold < 0:
+        return jsonify({
+            "error":
+                "Low-stock threshold cannot be negative."
+        }), 400
+
+    db = Inventory(DATABASE_PATH)
+
+    try:
+        product_id = (
+            db.create_product_with_package(
+                name=name,
+                brand=brand,
+                inventory_unit=inventory_unit,
+                low_stock_threshold=
+                    low_stock_threshold,
+                auto_add_grocery=
+                    auto_add_grocery,
+                barcode=barcode,
+                package_quantity=
+                    package_quantity
+            )
+        )
+
+        return jsonify({
+            "product_id": product_id,
+            "barcode": barcode,
+            "message": "Product created."
+        }), 201
+
+    except RuntimeError:
+        return jsonify({
+            "error":
+                "Could not create product. "
+                "The barcode may already exist."
+        }), 409
+
+    finally:
+        db.close()
 
 if __name__ == "__main__":
     app.run(

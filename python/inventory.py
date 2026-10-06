@@ -21,6 +21,14 @@ class InventoryItem(ctypes.Structure):
         ("quantity", ctypes.c_int),
     ]
 
+class Product(ctypes.Structure):
+    _fields_ = [
+        ("id", ctypes.c_int),
+        ("name", ctypes.c_char * 128),
+        ("brand", ctypes.c_char * 128),
+        ("inventory_unit", ctypes.c_char * 32),
+    ]
+
 class ProductPackage(ctypes.Structure):
     _fields_ = [
         ("product_id", ctypes.c_int),
@@ -94,6 +102,30 @@ class Inventory:
         ]
         self.lib.inventory_add.restype = ctypes.c_int
 
+        self.lib.product_create_with_package.argtypes = [
+            ctypes.POINTER(Database),
+            ctypes.c_char_p,       # name
+            ctypes.c_char_p,       # brand
+            ctypes.c_char_p,       # inventory_unit
+            ctypes.c_int,          # low_stock_threshold
+            ctypes.c_int,          # auto_add_grocery
+            ctypes.c_char_p,       # barcode
+            ctypes.c_int,          # package_quantity
+            ctypes.POINTER(ctypes.c_int)  # product_id_out
+        ]
+
+        self.lib.product_create_with_package.restype = ctypes.c_int
+
+
+        self.lib.product_add_package.argtypes = [
+            ctypes.POINTER(Database),
+            ctypes.c_int,       # product_id
+            ctypes.c_char_p,    # barcode
+            ctypes.c_int        # package_quantity
+        ]
+
+        self.lib.product_add_package.restype = ctypes.c_int
+
         self.lib.inventory_remove.argtypes = [
             ctypes.POINTER(Database),
             ctypes.c_int,
@@ -119,6 +151,14 @@ class Inventory:
             ctypes.POINTER(ctypes.c_int)
         ]
         self.lib.location_list.restype = ctypes.c_int
+
+        self.lib.product_list.argtypes = [
+            ctypes.POINTER(Database),
+            ctypes.POINTER(Product),
+            ctypes.c_int,
+            ctypes.POINTER(ctypes.c_int)
+        ]
+        self.lib.product_list.restype = ctypes.c_int
 
     def get_quantity(self, product_id, location_id):
         quantity = ctypes.c_int()
@@ -290,6 +330,87 @@ class Inventory:
             })
 
         return result
+
+    def list_products(self):
+        max_products = 100
+
+        products = (Product * max_products)()
+        product_count = ctypes.c_int()
+
+        rc = self.lib.product_list(
+            ctypes.byref(self.db),
+            products,
+            max_products,
+            ctypes.byref(product_count)
+        )
+
+        if rc != 0:
+            raise RuntimeError("Could not read products.")
+
+        result = []
+
+        for i in range(product_count.value):
+            product = products[i]
+
+            result.append({
+                "id": product.id,
+                "name": product.name.decode("utf-8"),
+                "brand": product.brand.decode("utf-8"),
+                "unit": product.inventory_unit.decode("utf-8"),
+            })
+
+        return result
+
+    def create_product_with_package(
+        self,
+        name,
+        brand,
+        inventory_unit,
+        low_stock_threshold,
+        auto_add_grocery,
+        barcode,
+        package_quantity
+    ):
+        product_id = ctypes.c_int()
+
+        rc = self.lib.product_create_with_package(
+            ctypes.byref(self.db),
+            name.encode("utf-8"),
+            brand.encode("utf-8") if brand else None,
+            inventory_unit.encode("utf-8"),
+            low_stock_threshold,
+            1 if auto_add_grocery else 0,
+            barcode.encode("utf-8"),
+            package_quantity,
+            ctypes.byref(product_id)
+        )
+
+        if rc != 0:
+            raise RuntimeError(
+                "Could not create product and package."
+            )
+
+        return product_id.value
+
+    def add_package(
+        self,
+        product_id,
+        barcode,
+        package_quantity
+    ):
+        rc = self.lib.product_add_package(
+            ctypes.byref(self.db),
+            product_id,
+            barcode.encode("utf-8"),
+            package_quantity
+        )
+
+        if rc != 0:
+            raise RuntimeError(
+                "Could not add package to product."
+            )
+
+    
 
 
 class User(ctypes.Structure):
