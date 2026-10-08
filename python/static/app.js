@@ -786,6 +786,9 @@ async function saveProduct() {
             );
         }
 
+        console.log("SKYLIGHT GROCERY RESULT:", result.grocery);
+        showSkylightToast(result.grocery);
+
         closeManageSheet();
         await refreshInventoryData();
     }
@@ -798,6 +801,45 @@ async function saveProduct() {
     }
 }
 
+
+/* =========================================================
+   SKYLIGHT FEEDBACK
+   ========================================================= */
+
+function showSkylightToast(grocery) {
+    // Only notify when something was actually added.
+    if (!grocery || !grocery.success || !grocery.added) {
+        return;
+    }
+
+    const existing =
+        document.getElementById("skylight-toast");
+
+    if (existing) {
+        existing.remove();
+    }
+
+    const toast = document.createElement("div");
+
+    toast.id = "skylight-toast";
+    toast.className = "skylight-toast";
+    toast.textContent =
+        "✓ Added to Skylight grocery list";
+
+    document.body.appendChild(toast);
+
+    requestAnimationFrame(() => {
+        toast.classList.add("show");
+    });
+
+    setTimeout(() => {
+        toast.classList.remove("show");
+
+        setTimeout(() => {
+            toast.remove();
+        }, 250);
+    }, 3000);
+}
 
 /* =========================================================
    REQUEST HELPER
@@ -841,6 +883,7 @@ async function runManagementRequest(
                 "Could not update inventory."
             );
         }
+        showSkylightToast(result.grocery);
 
         closeManageSheet();
         await refreshInventoryData();
