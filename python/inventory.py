@@ -31,7 +31,12 @@ class InventoryTransaction(ctypes.Structure):
         ("inventory_unit", ctypes.c_char * 32),
         ("location_name", ctypes.c_char * 128),
         ("user_name", ctypes.c_char * 128),
+        ("transaction_type", ctypes.c_char * 16),
         ("quantity_change", ctypes.c_int),
+        ("previous_quantity", ctypes.c_int),
+        ("new_quantity", ctypes.c_int),
+        ("destination_location_id", ctypes.c_int),
+        ("destination_location_name", ctypes.c_char * 128),
         ("created_at", ctypes.c_char * 32),
     ]
 
@@ -41,6 +46,9 @@ class Product(ctypes.Structure):
         ("name", ctypes.c_char * 128),
         ("brand", ctypes.c_char * 128),
         ("inventory_unit", ctypes.c_char * 32),
+        ("low_stock_threshold", ctypes.c_int),
+        ("auto_add_grocery", ctypes.c_int),
+        ("total_quantity", ctypes.c_int),
     ]
 
 class ProductPackage(ctypes.Structure):
@@ -157,6 +165,25 @@ class Inventory:
         ]
         self.lib.inventory_remove.restype = ctypes.c_int
 
+        self.lib.inventory_adjust.argtypes = [
+            ctypes.POINTER(Database),
+            ctypes.c_int,
+            ctypes.c_int,
+            ctypes.c_int,
+            ctypes.c_int
+        ]
+        self.lib.inventory_adjust.restype = ctypes.c_int
+
+        self.lib.inventory_move.argtypes = [
+            ctypes.POINTER(Database),
+            ctypes.c_int,
+            ctypes.c_int,
+            ctypes.c_int,
+            ctypes.c_int,
+            ctypes.c_int
+        ]
+        self.lib.inventory_move.restype = ctypes.c_int
+
         self.lib.user_list.argtypes = [
             ctypes.POINTER(Database),
             ctypes.POINTER(User),
@@ -181,6 +208,17 @@ class Inventory:
             ctypes.POINTER(ctypes.c_int)
         ]
         self.lib.product_list.restype = ctypes.c_int
+
+        self.lib.product_update.argtypes = [
+            ctypes.POINTER(Database),
+            ctypes.c_int,
+            ctypes.c_char_p,
+            ctypes.c_char_p,
+            ctypes.c_char_p,
+            ctypes.c_int,
+            ctypes.c_int
+        ]
+        self.lib.product_update.restype = ctypes.c_int
 
     def get_quantity(self, product_id, location_id):
         quantity = ctypes.c_int()
@@ -272,7 +310,28 @@ class Inventory:
                 "unit": transaction.inventory_unit.decode("utf-8"),
                 "location": transaction.location_name.decode("utf-8"),
                 "user": transaction.user_name.decode("utf-8"),
+                "transaction_type":
+                    transaction.transaction_type.decode("utf-8"),
                 "quantity_change": transaction.quantity_change,
+                "previous_quantity": (
+                    None
+                    if transaction.previous_quantity < 0
+                    else transaction.previous_quantity
+                ),
+                "new_quantity": (
+                    None
+                    if transaction.new_quantity < 0
+                    else transaction.new_quantity
+                ),
+                "destination_location_id": (
+                    transaction.destination_location_id
+                    if transaction.destination_location_id > 0
+                    else None
+                ),
+                "destination_location": (
+                    transaction.destination_location_name.decode("utf-8")
+                    or None
+                ),
                 "created_at": transaction.created_at.decode("utf-8"),
             })
 
@@ -329,6 +388,48 @@ class Inventory:
 
         if rc != 0:
             raise RuntimeError("Could not remove inventory.")
+
+        return True
+
+    def adjust(self, product_id, location_id, user_id, new_quantity):
+        rc = self.lib.inventory_adjust(
+            ctypes.byref(self.db),
+            product_id,
+            location_id,
+            user_id,
+            new_quantity
+        )
+
+        if rc == 1:
+            return False
+
+        if rc != 0:
+            raise RuntimeError("Could not adjust inventory.")
+
+        return True
+
+    def move(
+        self,
+        product_id,
+        source_location_id,
+        destination_location_id,
+        user_id,
+        quantity
+    ):
+        rc = self.lib.inventory_move(
+            ctypes.byref(self.db),
+            product_id,
+            source_location_id,
+            destination_location_id,
+            user_id,
+            quantity
+        )
+
+        if rc == 1:
+            return False
+
+        if rc != 0:
+            raise RuntimeError("Could not move inventory.")
 
         return True
 
@@ -420,9 +521,42 @@ class Inventory:
                 "name": product.name.decode("utf-8"),
                 "brand": product.brand.decode("utf-8"),
                 "unit": product.inventory_unit.decode("utf-8"),
+                "low_stock_threshold": product.low_stock_threshold,
+                "auto_add_grocery": bool(product.auto_add_grocery),
+                "total_quantity": product.total_quantity,
+                "is_low_stock": (
+                    product.total_quantity <= product.low_stock_threshold
+                ),
             })
 
         return result
+
+    def update_product(
+        self,
+        product_id,
+        name,
+        brand,
+        inventory_unit,
+        low_stock_threshold,
+        auto_add_grocery
+    ):
+        rc = self.lib.product_update(
+            ctypes.byref(self.db),
+            product_id,
+            name.encode("utf-8"),
+            brand.encode("utf-8") if brand else None,
+            inventory_unit.encode("utf-8"),
+            low_stock_threshold,
+            1 if auto_add_grocery else 0
+        )
+
+        if rc == 1:
+            return False
+
+        if rc != 0:
+            raise RuntimeError("Could not update product.")
+
+        return True
 
     def create_product_with_package(
         self,

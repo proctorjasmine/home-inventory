@@ -1140,3 +1140,166 @@ main {
 
     font-size: 12px;
 }
+
+/* =========================================================
+   INVENTORY MANAGEMENT
+   ========================================================= */
+
+.low-stock-section {
+    margin-top: 28px;
+}
+
+.low-stock-section[hidden] {
+    display: none;
+}
+
+#low-stock {
+    display: grid;
+    gap: 9px;
+}
+
+.low-stock-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+
+    width: 100%;
+    padding: 14px 15px;
+
+    border: 1px solid var(--border);
+    border-radius: 15px;
+
+    background: var(--surface);
+    color: var(--text);
+    text-align: left;
+}
+
+.low-stock-card strong,
+.low-stock-card span {
+    display: block;
+}
+
+.low-stock-card strong {
+    margin-bottom: 3px;
+}
+
+.low-stock-card div > span,
+.low-stock-threshold {
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.low-stock-threshold {
+    flex-shrink: 0;
+    padding: 6px 9px;
+
+    border-radius: 999px;
+
+    background: var(--accent-light);
+    color: var(--accent);
+    font-weight: 700;
+}
+
+.inventory-item {
+    cursor: pointer;
+}
+
+.management-sheet {
+    max-height: 92vh;
+    overflow-y: auto;
+}
+
+.management-actions {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 9px;
+
+    margin-top: 26px;
+}
+
+.management-action {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 7px;
+
+    min-width: 0;
+    padding: 13px 5px;
+
+    border: 1px solid var(--border);
+    border-radius: 14px;
+
+    background: var(--background);
+    color: var(--text);
+}
+
+.management-action strong {
+    display: grid;
+    place-items: center;
+
+    width: 32px;
+    height: 32px;
+
+    border-radius: 50%;
+
+    background: var(--accent-light);
+    color: var(--accent);
+
+    font-size: 18px;
+}
+
+.management-action span {
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.management-panel {
+    margin-top: 24px;
+    padding-top: 21px;
+
+    border-top: 1px solid var(--border);
+}
+
+.management-panel[hidden] {
+    display: none;
+}
+
+.management-panel h3 {
+    margin: 0 0 6px;
+    font-size: 18px;
+}
+
+.management-help {
+    margin: 0 0 16px;
+
+    color: var(--muted);
+
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+.management-panel .location-select {
+    margin-bottom: 4px;
+}
+
+.management-panel .primary-form-button {
+    margin-bottom: 2px;
+}
+
+.history-move,
+.history-adjust {
+    background: var(--accent-light);
+    color: var(--accent);
+}
+
+.history-count-change {
+    color: var(--muted);
+    font-size: 13px;
+}
+
+@media (max-width: 380px) {
+    .management-actions {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}

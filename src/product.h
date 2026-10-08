@@ -15,6 +15,10 @@ typedef struct
     char name[PRODUCT_NAME_MAX];
     char brand[BRAND_MAX];
     char inventory_unit[UNIT_MAX];
+
+    int low_stock_threshold;
+    int auto_add_grocery;
+    int total_quantity;
 } Product;
 
 typedef struct
@@ -60,6 +64,16 @@ int product_list(
     Product *products,
     int max_products,
     int *product_count
+);
+
+int product_update(
+    Database *db,
+    int product_id,
+    const char *name,
+    const char *brand,
+    const char *inventory_unit,
+    int low_stock_threshold,
+    int auto_add_grocery
 );
 
 #endif

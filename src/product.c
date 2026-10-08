@@ -71,7 +71,9 @@ int product_find_by_barcode(Database *db, const char *barcode, ProductPackage *r
             result->brand,
             sizeof(result->brand),
             "%s",
-            sqlite3_column_text(stmt, 4)
+            sqlite3_column_text(stmt, 4) != NULL
+                ? (const char *)sqlite3_column_text(stmt, 4)
+                : ""
         );
 
         snprintf(
@@ -401,9 +403,20 @@ int product_list(
     }
 
     const char *sql =
-        "SELECT id, name, brand, inventory_unit "
-        "FROM products "
-        "ORDER BY name;";
+        "SELECT "
+        "p.id, "
+        "p.name, "
+        "COALESCE(p.brand, ''), "
+        "p.inventory_unit, "
+        "p.low_stock_threshold, "
+        "p.auto_add_grocery, "
+        "COALESCE(SUM(i.quantity), 0) "
+        "FROM products p "
+        "LEFT JOIN inventory i ON i.product_id = p.id "
+        "GROUP BY "
+        "p.id, p.name, p.brand, p.inventory_unit, "
+        "p.low_stock_threshold, p.auto_add_grocery "
+        "ORDER BY p.name;";
 
     sqlite3_stmt *stmt = NULL;
 
@@ -421,7 +434,6 @@ int product_list(
             "Failed to prepare product list: %s\n",
             sqlite3_errmsg(db->connection)
         );
-
         return -1;
     }
 
@@ -437,10 +449,8 @@ int product_list(
 
         const unsigned char *name =
             sqlite3_column_text(stmt, 1);
-
         const unsigned char *brand =
             sqlite3_column_text(stmt, 2);
-
         const unsigned char *unit =
             sqlite3_column_text(stmt, 3);
 
@@ -465,6 +475,13 @@ int product_list(
             unit != NULL ? (const char *)unit : ""
         );
 
+        product->low_stock_threshold =
+            sqlite3_column_int(stmt, 4);
+        product->auto_add_grocery =
+            sqlite3_column_int(stmt, 5);
+        product->total_quantity =
+            sqlite3_column_int(stmt, 6);
+
         count++;
     }
 
@@ -474,15 +491,98 @@ int product_list(
             "Failed while reading product list: %s\n",
             sqlite3_errmsg(db->connection)
         );
-
         sqlite3_finalize(stmt);
-
         return -1;
     }
 
     sqlite3_finalize(stmt);
-
     *product_count = count;
+    return 0;
+}
+
+int product_update(
+    Database *db,
+    int product_id,
+    const char *name,
+    const char *brand,
+    const char *inventory_unit,
+    int low_stock_threshold,
+    int auto_add_grocery
+) {
+    if (
+        db == NULL ||
+        db->connection == NULL ||
+        product_id <= 0 ||
+        name == NULL ||
+        name[0] == '\0' ||
+        inventory_unit == NULL ||
+        inventory_unit[0] == '\0' ||
+        low_stock_threshold < 0
+    ) {
+        return -1;
+    }
+
+    const char *sql =
+        "UPDATE products "
+        "SET name = ?, "
+        "brand = ?, "
+        "inventory_unit = ?, "
+        "low_stock_threshold = ?, "
+        "auto_add_grocery = ? "
+        "WHERE id = ?;";
+
+    sqlite3_stmt *stmt = NULL;
+
+    int rc = sqlite3_prepare_v2(
+        db->connection,
+        sql,
+        -1,
+        &stmt,
+        NULL
+    );
+
+    if (rc != SQLITE_OK) {
+        fprintf(
+            stderr,
+            "Failed to prepare product update: %s\n",
+            sqlite3_errmsg(db->connection)
+        );
+        return -1;
+    }
+
+    sqlite3_bind_text(stmt, 1, name, -1, SQLITE_TRANSIENT);
+
+    if (brand != NULL && brand[0] != '\0') {
+        sqlite3_bind_text(stmt, 2, brand, -1, SQLITE_TRANSIENT);
+    }
+    else {
+        sqlite3_bind_null(stmt, 2);
+    }
+
+    sqlite3_bind_text(
+        stmt, 3, inventory_unit, -1, SQLITE_TRANSIENT
+    );
+    sqlite3_bind_int(stmt, 4, low_stock_threshold);
+    sqlite3_bind_int(stmt, 5, auto_add_grocery ? 1 : 0);
+    sqlite3_bind_int(stmt, 6, product_id);
+
+    rc = sqlite3_step(stmt);
+
+    if (rc != SQLITE_DONE) {
+        fprintf(
+            stderr,
+            "Failed to update product: %s\n",
+            sqlite3_errmsg(db->connection)
+        );
+        sqlite3_finalize(stmt);
+        return -1;
+    }
+
+    int changed = sqlite3_changes(db->connection);
+    sqlite3_finalize(stmt);
+
+    if (changed == 0)
+        return 1;
 
     return 0;
 }

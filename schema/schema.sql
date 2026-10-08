@@ -72,8 +72,23 @@ CREATE TABLE IF NOT EXISTS transactions (
     location_id INTEGER NOT NULL,
     user_id INTEGER NOT NULL,
 
+    transaction_type TEXT NOT NULL
+        CHECK (
+            transaction_type IN (
+                'restock',
+                'consume',
+                'adjustment',
+                'move'
+            )
+        ),
+
     quantity_change INTEGER NOT NULL
         CHECK (quantity_change != 0),
+
+    previous_quantity INTEGER,
+    new_quantity INTEGER,
+
+    destination_location_id INTEGER,
 
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -81,6 +96,9 @@ CREATE TABLE IF NOT EXISTS transactions (
         REFERENCES products(id),
 
     FOREIGN KEY (location_id)
+        REFERENCES locations(id),
+
+    FOREIGN KEY (destination_location_id)
         REFERENCES locations(id),
 
     FOREIGN KEY (user_id)

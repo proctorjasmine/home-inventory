@@ -22,13 +22,6 @@ function loadCurrentUser() {
     const storedUserId =
         localStorage.getItem("inventoryUserId");
 
-    const storedUserName =
-        localStorage.getItem("inventoryUserName");
-
-    /*
-     * app.js currently stores the user ID.
-     * If no name has been stored yet, we fetch users below.
-     */
     if (!storedUserId) {
         button.textContent = "?";
         return;
@@ -40,41 +33,30 @@ function loadCurrentUser() {
 
 async function loadUserFromApi(userId) {
     try {
-        const response =
-            await fetch("/api/users");
+        const response = await fetch("/api/users");
 
         if (!response.ok) {
             return;
         }
 
-        const users =
-            await response.json();
+        const users = await response.json();
 
         const user =
-            users.find(
-                item => item.id === userId
-            );
+            users.find(item => item.id === userId);
 
         if (!user) {
             return;
         }
 
         const button =
-            document.getElementById(
-                "profile-button"
-            );
+            document.getElementById("profile-button");
 
         button.textContent =
-            user.name
-                .charAt(0)
-                .toUpperCase();
+            user.name.charAt(0).toUpperCase();
 
         button.title = user.name;
 
-        if (
-            user.name.toLowerCase()
-            === "jasmine"
-        ) {
+        if (user.name.toLowerCase() === "jasmine") {
             document.body.classList.add(
                 "theme-jasmine"
             );
@@ -87,38 +69,27 @@ async function loadUserFromApi(userId) {
 
 
 /* =========================================================
-   LOAD HISTORY
+   LOAD / RENDER
    ========================================================= */
 
 async function loadHistory() {
-    const response =
-        await fetch("/api/history");
+    const response = await fetch("/api/history");
 
     if (!response.ok) {
-        throw new Error(
-            "Could not load history."
-        );
+        throw new Error("Could not load history.");
     }
 
-    allHistory =
-        await response.json();
-
+    allHistory = await response.json();
     renderHistory(allHistory);
 }
 
-
-/* =========================================================
-   RENDER
-   ========================================================= */
 
 function renderHistory(transactions) {
     const container =
         document.getElementById("history");
 
     const count =
-        document.getElementById(
-            "history-count"
-        );
+        document.getElementById("history-count");
 
     container.innerHTML = "";
 
@@ -135,7 +106,6 @@ function renderHistory(transactions) {
                 No inventory history yet.
             </p>
         `;
-
         return;
     }
 
@@ -147,30 +117,23 @@ function renderHistory(transactions) {
                 transaction.created_at
             );
 
-        const key =
-            getDateGroupKey(date);
+        const key = getDateGroupKey(date);
 
         if (!grouped.has(key)) {
             grouped.set(key, []);
         }
 
-        grouped
-            .get(key)
-            .push({
-                ...transaction,
-                localDate: date
-            });
+        grouped.get(key).push({
+            ...transaction,
+            localDate: date
+        });
     }
 
-    for (
-        const [dateLabel, entries]
-        of grouped
-    ) {
+    for (const [dateLabel, entries] of grouped) {
         const group =
             document.createElement("section");
 
-        group.className =
-            "history-day";
+        group.className = "history-day";
 
         const heading =
             document.createElement("h3");
@@ -178,16 +141,13 @@ function renderHistory(transactions) {
         heading.className =
             "history-day-heading";
 
-        heading.textContent =
-            dateLabel;
-
+        heading.textContent = dateLabel;
         group.appendChild(heading);
 
         const card =
             document.createElement("div");
 
-        card.className =
-            "history-card";
+        card.className = "history-card";
 
         for (const entry of entries) {
             card.appendChild(
@@ -202,87 +162,51 @@ function renderHistory(transactions) {
 
 
 function createHistoryRow(transaction) {
-    const row =
-        document.createElement("div");
-
+    const row = document.createElement("div");
     row.className = "history-item";
 
-    const isRestock =
-        transaction.quantity_change > 0;
-
-    const quantity =
-        Math.abs(
-            transaction.quantity_change
-        );
-
-    const action =
-        isRestock
-            ? "Restocked"
-            : "Used";
-
-    const icon =
-        isRestock
-            ? "+"
-            : "−";
-
-    const unit =
-        pluralize(
-            transaction.unit,
-            quantity
-        );
+    const presentation =
+        getTransactionPresentation(transaction);
 
     const time =
-        transaction.localDate
-            .toLocaleTimeString(
-                [],
-                {
-                    hour: "numeric",
-                    minute: "2-digit"
-                }
-            );
+        transaction.localDate.toLocaleTimeString(
+            [],
+            {
+                hour: "numeric",
+                minute: "2-digit"
+            }
+        );
 
     row.innerHTML = `
         <div
             class="history-icon
-            ${isRestock
-                ? "history-add"
-                : "history-remove"}"
+            ${presentation.iconClass}"
         >
-            ${icon}
+            ${presentation.icon}
         </div>
 
         <div class="history-details">
-
             <div class="history-title-row">
                 <p class="history-product">
-                    ${escapeHtml(
-                        transaction.product
-                    )}
+                    ${escapeHtml(transaction.product)}
                 </p>
 
                 <span class="history-quantity">
-                    ${isRestock ? "+" : "−"}${quantity}
+                    ${escapeHtml(
+                        presentation.quantityLabel
+                    )}
                 </span>
             </div>
 
             <p class="history-action">
-                ${action}
-                ${quantity}
-                ${escapeHtml(unit)}
-                ·
-                ${escapeHtml(
-                    transaction.location
-                )}
+                ${presentation.actionHtml}
             </p>
 
             <p class="history-meta">
-                ${escapeHtml(
-                    transaction.user
-                )}
+                ${escapeHtml(transaction.user)}
                 ·
                 ${time}
             </p>
-
         </div>
     `;
 
@@ -290,20 +214,94 @@ function createHistoryRow(transaction) {
 }
 
 
+function getTransactionPresentation(transaction) {
+    const type =
+        transaction.transaction_type ||
+        (
+            transaction.quantity_change > 0
+                ? "restock"
+                : "consume"
+        );
+
+    const quantity =
+        Math.abs(transaction.quantity_change);
+
+    const unit =
+        pluralize(transaction.unit, quantity);
+
+    if (type === "move") {
+        return {
+            icon: "⇄",
+            iconClass: "history-move",
+            quantityLabel: `${quantity}`,
+            actionHtml:
+                `Moved ${quantity} ${escapeHtml(unit)}` +
+                ` · ${escapeHtml(transaction.location)}` +
+                ` → ${escapeHtml(
+                    transaction.destination_location || ""
+                )}`
+        };
+    }
+
+    if (type === "adjustment") {
+        const before =
+            transaction.previous_quantity;
+
+        const after =
+            transaction.new_quantity;
+
+        return {
+            icon: "✓",
+            iconClass: "history-adjust",
+            quantityLabel:
+                transaction.quantity_change > 0
+                    ? `+${transaction.quantity_change}`
+                    : `${transaction.quantity_change}`,
+            actionHtml:
+                `Counted · ${escapeHtml(transaction.location)}` +
+                (
+                    before !== null &&
+                    after !== null
+                        ? `<br><span class="history-count-change">` +
+                          `${before} → ${after} ` +
+                          `${escapeHtml(
+                              pluralize(
+                                  transaction.unit,
+                                  after
+                              )
+                          )}</span>`
+                        : ""
+                )
+        };
+    }
+
+    if (type === "restock") {
+        return {
+            icon: "+",
+            iconClass: "history-add",
+            quantityLabel: `+${quantity}`,
+            actionHtml:
+                `Restocked ${quantity} ${escapeHtml(unit)}` +
+                ` · ${escapeHtml(transaction.location)}`
+        };
+    }
+
+    return {
+        icon: "−",
+        iconClass: "history-remove",
+        quantityLabel: `−${quantity}`,
+        actionHtml:
+            `Consumed ${quantity} ${escapeHtml(unit)}` +
+            ` · ${escapeHtml(transaction.location)}`
+    };
+}
+
+
 /* =========================================================
-   DATES
+   DATES / TEXT
    ========================================================= */
 
 function parseUtcTimestamp(timestamp) {
-    /*
-     * SQLite CURRENT_TIMESTAMP returns:
-     *
-     * 2026-10-06 01:24:31
-     *
-     * That value is UTC, but it has no timezone
-     * marker. Convert the space to T and append Z
-     * so JavaScript knows it is UTC.
-     */
     return new Date(
         timestamp.replace(" ", "T") + "Z"
     );
@@ -312,19 +310,12 @@ function parseUtcTimestamp(timestamp) {
 
 function getDateGroupKey(date) {
     const now = new Date();
-
-    const today =
-        startOfDay(now);
-
-    const transactionDay =
-        startOfDay(date);
+    const today = startOfDay(now);
+    const transactionDay = startOfDay(date);
 
     const difference =
         Math.round(
-            (
-                today -
-                transactionDay
-            ) /
+            (today - transactionDay) /
             86400000
         );
 
@@ -360,10 +351,6 @@ function startOfDay(date) {
 }
 
 
-/* =========================================================
-   TEXT HELPERS
-   ========================================================= */
-
 function pluralize(unit, quantity) {
     if (quantity === 1) {
         return unit;
@@ -377,15 +364,13 @@ function escapeHtml(value) {
     const element =
         document.createElement("div");
 
-    element.textContent =
-        value ?? "";
-
+    element.textContent = value ?? "";
     return element.innerHTML;
 }
 
 
 /* =========================================================
-   NAVIGATION
+   NAVIGATION / START
    ========================================================= */
 
 document
@@ -397,7 +382,6 @@ document
         }
     );
 
-
 document
     .getElementById("nav-scan-button")
     .addEventListener(
@@ -407,14 +391,8 @@ document
         }
     );
 
-
-/* =========================================================
-   START
-   ========================================================= */
-
 initializeHistory()
     .catch(error => {
-
         console.error(error);
 
         document

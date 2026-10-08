@@ -56,6 +56,15 @@
                 </span>
             </button>
 
+            <section class="low-stock-section" id="low-stock-section" hidden>
+                <div class="section-heading">
+                    <h2>Low Stock</h2>
+                    <span id="low-stock-count"></span>
+                </div>
+
+                <div id="low-stock"></div>
+            </section>
+
             <section class="inventory-section">
                 <div class="section-heading">
                     <h2>Inventory</h2>
@@ -130,7 +139,7 @@
         </div>
 
 
-        <!-- Consume inventory sheet -->
+        <!-- Inventory management sheet -->
 
         <div
             class="sheet-overlay"
@@ -138,14 +147,15 @@
         ></div>
 
         <div
-            class="bottom-sheet"
-            id="consume-sheet"
+            class="bottom-sheet management-sheet"
+            id="manage-sheet"
         >
             <div class="sheet-handle"></div>
 
             <button
                 class="sheet-close"
                 id="sheet-close"
+                aria-label="Close"
             >
                 ×
             </button>
@@ -163,27 +173,168 @@
             </div>
 
             <p class="sheet-stock-label">
-                currently in stock
+                currently in this location
             </p>
 
-            <div class="quantity-control">
-                <button id="quantity-minus">−</button>
+            <div class="management-actions" id="management-actions">
+                <button class="management-action" id="show-consume">
+                    <strong>−</strong>
+                    <span>Consume</span>
+                </button>
 
-                <span id="consume-quantity">1</span>
+                <button class="management-action" id="show-count">
+                    <strong>✓</strong>
+                    <span>Count</span>
+                </button>
 
-                <button id="quantity-plus">+</button>
+                <button class="management-action" id="show-move">
+                    <strong>⇄</strong>
+                    <span>Move</span>
+                </button>
+
+                <button class="management-action" id="show-edit">
+                    <strong>✎</strong>
+                    <span>Edit</span>
+                </button>
             </div>
 
-            <button
-                class="consume-button"
-                id="consume-button"
-            >
-                Consume 1
-            </button>
+            <div class="management-panel" id="consume-panel" hidden>
+                <h3>Consume inventory</h3>
+
+                <div class="quantity-control">
+                    <button id="quantity-minus">−</button>
+                    <span id="consume-quantity">1</span>
+                    <button id="quantity-plus">+</button>
+                </div>
+
+                <button
+                    class="primary-form-button"
+                    id="consume-button"
+                >
+                    Consume 1
+                </button>
+            </div>
+
+            <div class="management-panel" id="count-panel" hidden>
+                <h3>Physical count</h3>
+
+                <p class="management-help">
+                    Enter how many you can actually count in this location.
+                </p>
+
+                <label class="form-label" for="count-quantity">
+                    Actual quantity
+                </label>
+
+                <input
+                    class="form-input"
+                    id="count-quantity"
+                    type="number"
+                    inputmode="numeric"
+                    min="0"
+                >
+
+                <button
+                    class="primary-form-button"
+                    id="save-count-button"
+                >
+                    Save Count
+                </button>
+            </div>
+
+            <div class="management-panel" id="move-panel" hidden>
+                <h3>Move inventory</h3>
+
+                <label class="form-label" for="move-location">
+                    Move to
+                </label>
+
+                <select
+                    class="location-select"
+                    id="move-location"
+                ></select>
+
+                <label class="form-label" for="move-quantity">
+                    Quantity
+                </label>
+
+                <input
+                    class="form-input"
+                    id="move-quantity"
+                    type="number"
+                    inputmode="numeric"
+                    min="1"
+                    value="1"
+                >
+
+                <button
+                    class="primary-form-button"
+                    id="move-button"
+                >
+                    Move Inventory
+                </button>
+            </div>
+
+            <div class="management-panel" id="edit-panel" hidden>
+                <h3>Edit product</h3>
+
+                <label class="form-label" for="edit-name">
+                    Product name
+                </label>
+                <input class="form-input" id="edit-name">
+
+                <label class="form-label" for="edit-brand">
+                    Brand
+                </label>
+                <input class="form-input" id="edit-brand">
+
+                <div class="form-row">
+                    <div>
+                        <label class="form-label" for="edit-unit">
+                            Inventory unit
+                        </label>
+                        <input class="form-input" id="edit-unit">
+                    </div>
+
+                    <div>
+                        <label class="form-label" for="edit-threshold">
+                            Low-stock at
+                        </label>
+                        <input
+                            class="form-input"
+                            id="edit-threshold"
+                            type="number"
+                            inputmode="numeric"
+                            min="0"
+                        >
+                    </div>
+                </div>
+
+                <label class="toggle-row">
+                    <span>
+                        <strong>Auto-add to grocery list</strong>
+                        <span>
+                            Used when Skylight automation is enabled.
+                        </span>
+                    </span>
+
+                    <input
+                        id="edit-auto-grocery"
+                        type="checkbox"
+                    >
+                </label>
+
+                <button
+                    class="primary-form-button"
+                    id="save-product-button"
+                >
+                    Save Product
+                </button>
+            </div>
 
             <p
                 class="consume-error"
-                id="consume-error"
+                id="manage-error"
             ></p>
         </div>
 
